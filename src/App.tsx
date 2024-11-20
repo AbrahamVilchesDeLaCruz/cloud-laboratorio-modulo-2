@@ -14,7 +14,7 @@ function App() {
           <img src={reactLogo} className="logo react" alt="React logo" />
         </a>
       </div>
-      <h1>LABORATORIO CLOUD MODULO 1: SUBIDA MANUAL A GITHUB PAGES</h1>
+      <h1>LABORATORIO CLOUD MODULO 2: SUBIDA AUTOMÁTICA A GITHUB PAGES</h1>
     </>
   )
 }
