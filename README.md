@@ -1,50 +1,55 @@
-# React + TypeScript + Vite
+## Despliegue Automático con GitHub Actions
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Se ha creado el archivo `./github/workflows/cd.yml` para automatizar el despliegue en la rama principal (`master`) del repositorio. El flujo se activa cuando se completa una **pull request** que ha sido fusionada (merge) en la rama `master`.
 
-Currently, two official plugins are available:
+### Decisión de Diseño
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+El enunciado del laboratorio indicaba que el despliegue debía ejecutarse al producirse un **merge** en la rama principal. Aunque habría sido posible configurar el flujo para que se disparara mediante un evento de **push** a `master`, esta opción no fue elegida por las siguientes razones:
 
-## Expanding the ESLint configuration
+- Un **push** puede realizarse directamente en la rama principal sin pasar por un **merge**, lo cual no es una buena práctica.
+- Usar un flujo basado en **pull request** asegura que los cambios hayan sido revisados, aprobados y fusionados correctamente antes de proceder con el despliegue.
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+### Ventajas del Enfoque Basado en Pull Request
 
-- Configure the top-level `parserOptions` property like this:
+- **Mayor control**: Garantiza que solo los cambios revisados y aprobados lleguen a producción.
+- **Buenas prácticas**: Refuerza un flujo de trabajo más estructurado y colaborativo, evitando actualizaciones directas a la rama principal.
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+Este diseño refleja una decisión consciente para alinear el proceso de automatización con las mejores prácticas de desarrollo y los objetivos del laboratorio.
+
+
+---
+
+### Diferencias Entre los Dos Enfoques
+
+A continuación, se detallan los cambios principales entre el código actual (basado en **pull request**) y el que usaría un evento de **push**:
+
+#### Código Actual: Basado en Pull Request
+
+```yaml
+on:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  cd:
+    if: ${{ github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'master' }}
+    runs-on: ubuntu-latest
+    steps:
+      # Pasos de despliegue...
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+#### Código Alternativo: Basado en Push
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+```yaml
+on:
+  push:
+    branches:
+      - master
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+jobs:
+  cd:
+    runs-on: ubuntu-latest
+    steps:
+      # Pasos de despliegue...
 ```
